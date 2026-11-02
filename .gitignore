@@ -1,8 +1,27 @@
-﻿target/
-*.db
-*.sqlite
-*.sqlite3
+﻿# Java
+target/
+*.class
+*.jar
+*.war
+
+# Node
+node_modules/
+dist/
+.vite/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# IDE and OS
 .idea/
 .vscode/
 *.iml
 .DS_Store
+Thumbs.db
+
+inventory.db
+backend/src/App.tsx
