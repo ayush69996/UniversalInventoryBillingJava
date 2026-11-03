@@ -170,7 +170,22 @@ function Sales() {
           <div className="product-form sale-details">
             <div className="form-heading">
               <h2>Sale #{selectedSale.id}</h2>
-              <button onClick={() => setSelectedSale(null)}>✕</button>
+              <button
+                type="button"
+                onClick={() => setSelectedSale(null)}
+                style={{
+                  background: '#2563eb',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '9px 14px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: 600
+                }}
+              >
+                ← Back to Sales History
+              </button>
             </div>
 
             <p className="sale-date">
