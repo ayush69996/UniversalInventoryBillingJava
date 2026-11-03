@@ -68,10 +68,32 @@ function Sales() {
           <span className="breadcrumb">Workspace / Transactions</span>
           <h1>Sales History</h1>
         </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="date-button" onClick={() => window.history.back()}>
-            ← Back
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = '/'
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              visibility: 'visible',
+              opacity: 1,
+              background: '#2563eb',
+              color: '#ffffff',
+              padding: '10px 18px',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600
+            }}
+          >
+            ← Back to Dashboard
           </button>
+
           <button className="date-button" onClick={loadSales}>
             ↻ Refresh
           </button>
@@ -124,8 +146,10 @@ function Sales() {
                       <td>{currency(sale.taxAmount)}</td>
                       <td><strong>{currency(sale.total)}</strong></td>
                       <td>
-                        <button className="sale-view-button"
-                          onClick={() => setSelectedSale(sale)}>
+                        <button
+                          className="sale-view-button"
+                          onClick={() => setSelectedSale(sale)}
+                        >
                           View
                         </button>
                       </td>
