@@ -231,47 +231,94 @@ function Inventory() {
             </div>
 
             <label>Product Name</label>
-            <input required value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })} />
+            <input
+              required
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+            />
 
             <label>SKU</label>
-            <input required value={form.sku}
-              onChange={e => setForm({ ...form, sku: e.target.value })} />
+            <input
+              required
+              value={form.sku}
+              onChange={e => setForm({ ...form, sku: e.target.value })}
+            />
 
             <label>Category</label>
-            <input required value={form.category}
-              onChange={e => setForm({ ...form, category: e.target.value })} />
+            <input
+              required
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+            />
 
             <div className="form-grid">
               <div>
                 <label>Cost Price (₹)</label>
-                <input type="number" min="0" step="0.01" required
-                  value={form.costPrice}
-                  onChange={e => setForm({ ...form, costPrice: Number(e.target.value) })} />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={form.costPrice === 0 ? '' : form.costPrice}
+                  onChange={e => setForm({
+                    ...form,
+                    costPrice: e.target.value === '' ? 0 : Number(e.target.value)
+                  })}
+                />
               </div>
+
               <div>
                 <label>Selling Price (₹)</label>
-                <input type="number" min="0" step="0.01" required
-                  value={form.sellingPrice}
-                  onChange={e => setForm({ ...form, sellingPrice: Number(e.target.value) })} />
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={form.sellingPrice === 0 ? '' : form.sellingPrice}
+                  onChange={e => setForm({
+                    ...form,
+                    sellingPrice: e.target.value === '' ? 0 : Number(e.target.value)
+                  })}
+                />
               </div>
+
               <div>
                 <label>Quantity</label>
-                <input type="number" min="0" required
-                  value={form.quantity}
-                  onChange={e => setForm({ ...form, quantity: Number(e.target.value) })} />
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={form.quantity === 0 ? '' : form.quantity}
+                  onChange={e => setForm({
+                    ...form,
+                    quantity: e.target.value === '' ? 0 : Number(e.target.value)
+                  })}
+                />
               </div>
+
               <div>
                 <label>Low Stock Level</label>
-                <input type="number" min="0" required
-                  value={form.lowStockLevel}
-                  onChange={e => setForm({ ...form, lowStockLevel: Number(e.target.value) })} />
+                <input
+                  type="number"
+                  min="0"
+                  required
+                  value={form.lowStockLevel === 0 ? '' : form.lowStockLevel}
+                  onChange={e => setForm({
+                    ...form,
+                    lowStockLevel: e.target.value === '' ? 0 : Number(e.target.value)
+                  })}
+                />
               </div>
             </div>
 
             <div className="form-actions">
-              <button type="button" className="date-button"
-                onClick={() => setShowForm(false)}>Cancel</button>
+              <button
+                type="button"
+                className="date-button"
+                onClick={() => setShowForm(false)}
+              >
+                Cancel
+              </button>
               <button type="submit" className="primary-button">
                 {editingId ? 'Update Product' : 'Save Product'}
               </button>
