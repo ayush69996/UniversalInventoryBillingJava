@@ -14,6 +14,25 @@ interface BillLine {
   quantity: number
 }
 
+interface InvoiceItem {
+  productName: string
+  sku: string
+  price: number
+  quantity: number
+  amount: number
+}
+
+interface Invoice {
+  id: number
+  date: string
+  items: InvoiceItem[]
+  subtotal: number
+  discount: number
+  taxRate: number
+  taxAmount: number
+  total: number
+}
+
 function Billing() {
   const [products, setProducts] = useState<Product[]>([])
   const [items, setItems] = useState<BillLine[]>([])
@@ -21,6 +40,7 @@ function Billing() {
   const [discount, setDiscount] = useState(0)
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [invoice, setInvoice] = useState<Invoice | null>(null)
 
   useEffect(() => {
     fetch('/api/products')
@@ -58,8 +78,9 @@ function Billing() {
   const currency = (amount: number) =>
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'INR'
-    }).format(amount)
+      currency: 'INR',
+      minimumFractionDigits: 2
+    }).format(amount || 0)
 
   async function createBill() {
     setMessage('')
@@ -82,6 +103,14 @@ function Billing() {
       return
     }
 
+    const invoiceItems: InvoiceItem[] = selectedProducts.map(item => ({
+      productName: item.product?.name || 'Product',
+      sku: item.product?.sku || '',
+      price: item.product?.sellingPrice || 0,
+      quantity: item.quantity,
+      amount: (item.product?.sellingPrice || 0) * item.quantity
+    }))
+
     setLoading(true)
 
     try {
@@ -97,17 +126,106 @@ function Billing() {
       }
 
       const sale = await response.json()
-      setMessage(`Bill #${sale.id} created successfully. Total: ${currency(sale.total)}`)
+
+      setInvoice({
+        id: sale.id,
+        date: sale.date || new Date().toISOString(),
+        items: invoiceItems,
+        subtotal: sale.subtotal ?? subtotal,
+        discount: sale.discount ?? discount,
+        taxRate: sale.taxRate ?? taxRate,
+        taxAmount: sale.taxAmount ?? taxAmount,
+        total: sale.total
+      })
+
       setItems([])
       setDiscount(0)
 
-      const updatedProducts = await fetch('/api/products').then(r => r.json())
+      const updatedProducts = await fetch('/api/products').then(r => {
+        if (!r.ok) throw new Error('Unable to refresh products')
+        return r.json()
+      })
+
       setProducts(updatedProducts)
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Something went wrong.')
     } finally {
       setLoading(false)
     }
+  }
+
+  function printInvoice() {
+    if (!invoice) return
+
+    const printWindow = window.open('', '_blank', 'width=850,height=700')
+
+    if (!printWindow) {
+      setMessage('Please allow popups to print your invoice.')
+      return
+    }
+
+    const safe = (value: string) =>
+      value.replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[char] || char)
+
+    const rows = invoice.items.map(item => `
+      <tr>
+        <td>${safe(item.productName)}</td>
+        <td>${safe(item.sku)}</td>
+        <td>${item.quantity}</td>
+        <td>${currency(item.price)}</td>
+        <td>${currency(item.amount)}</td>
+      </tr>
+    `).join('')
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice #${invoice.id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; color: #222; }
+          h1 { margin-bottom: 5px; }
+          .muted { color: #666; }
+          table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+          th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+          th { background: #f3f3f3; }
+          .totals { width: 320px; margin: 25px 0 0 auto; }
+          .line { display: flex; justify-content: space-between; padding: 8px; }
+          .grand { font-size: 20px; font-weight: bold; border-top: 2px solid #222; }
+          @media print { body { padding: 10px; } }
+        </style>
+      </head>
+      <body>
+        <h1>Universal Inventory & Billing System</h1>
+        <p class="muted">CUSTOMER INVOICE</p>
+        <hr>
+        <p><strong>Invoice Number:</strong> #${invoice.id}</p>
+        <p><strong>Date:</strong> ${new Date(invoice.date).toLocaleString('en-IN')}</p>
+        <table>
+          <thead>
+            <tr><th>Product</th><th>SKU</th><th>Quantity</th><th>Price</th><th>Amount</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="totals">
+          <div class="line"><span>Subtotal</span><strong>${currency(invoice.subtotal)}</strong></div>
+          <div class="line"><span>Discount</span><strong>${currency(invoice.discount)}</strong></div>
+          <div class="line"><span>Tax (${invoice.taxRate}%)</span><strong>${currency(invoice.taxAmount)}</strong></div>
+          <div class="line grand"><span>Grand Total</span><strong>${currency(invoice.total)}</strong></div>
+        </div>
+        <p style="text-align:center;margin-top:60px;">Thank you for your business!</p>
+        <script>window.onload = () => window.print();<\/script>
+      </body>
+      </html>
+    `)
+
+    printWindow.document.close()
   }
 
   return (
@@ -213,6 +331,73 @@ function Billing() {
           {message && <p className="billing-message">{message}</p>}
         </div>
       </section>
+
+      {invoice && (
+        <div className="modal-overlay" onClick={() => setInvoice(null)}>
+          <div
+            className="product-form"
+            style={{ maxWidth: '750px', width: '95%', maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="form-heading">
+              <div>
+                <h2>Invoice Generated!</h2>
+                <p>Invoice #{invoice.id}</p>
+              </div>
+              <button type="button" onClick={() => setInvoice(null)}>✕</button>
+            </div>
+
+            <div style={{ textAlign: 'center', padding: '15px' }}>
+              <h2 style={{ color: '#16a34a' }}>✓ Payment Bill Created</h2>
+              <p>Universal Inventory & Billing System</p>
+              <p>Invoice Date: {new Date(invoice.date).toLocaleString('en-IN')}</p>
+            </div>
+
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>PRODUCT</th>
+                    <th>SKU</th>
+                    <th>PRICE</th>
+                    <th>QUANTITY</th>
+                    <th>AMOUNT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoice.items.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.productName}</td>
+                      <td>{item.sku}</td>
+                      <td>{currency(item.price)}</td>
+                      <td>{item.quantity}</td>
+                      <td>{currency(item.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ marginTop: '20px' }}>
+              <div className="summary-line"><span>Subtotal</span><strong>{currency(invoice.subtotal)}</strong></div>
+              <div className="summary-line"><span>Discount</span><strong>{currency(invoice.discount)}</strong></div>
+              <div className="summary-line"><span>Tax ({invoice.taxRate}%)</span><strong>{currency(invoice.taxAmount)}</strong></div>
+              <div className="summary-grand"><span>Grand Total</span><strong>{currency(invoice.total)}</strong></div>
+            </div>
+
+            <p style={{ textAlign: 'center', marginTop: '20px' }}>Thank you for your business!</p>
+
+            <div className="form-actions">
+              <button className="date-button" onClick={() => setInvoice(null)}>
+                Close
+              </button>
+              <button className="primary-button" onClick={printInvoice}>
+                Print Invoice
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
