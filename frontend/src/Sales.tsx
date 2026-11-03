@@ -68,7 +68,14 @@ function Sales() {
           <span className="breadcrumb">Workspace / Transactions</span>
           <h1>Sales History</h1>
         </div>
-        <button className="date-button" onClick={loadSales}>↻ Refresh</button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="date-button" onClick={() => window.history.back()}>
+            ← Back
+          </button>
+          <button className="date-button" onClick={loadSales}>
+            ↻ Refresh
+          </button>
+        </div>
       </header>
 
       <section className="sales-page">
