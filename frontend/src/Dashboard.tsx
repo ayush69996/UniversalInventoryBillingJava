@@ -55,7 +55,14 @@ function Dashboard({ onNavigate }: { onNavigate: (page: string) => void }) {
       const inventory = await inventoryRes.json()
       const salesReport = await salesRes.json()
 
-      setData(dashboard)
+      setData({
+  totalProducts: dashboard.totalProducts,
+  totalSales: dashboard.totalSales,
+  revenue: dashboard.totalRevenue,
+  grossProfit: dashboard.grossProfitBeforeTaxAndDiscount,
+  lowStockCount: dashboard.lowStockProducts,
+  totalUnits: dashboard.totalStockUnits,
+})
       setProducts(inventory.products || [])
       setSales((salesReport.sales || []).slice().reverse().slice(0, 5))
     } catch {
